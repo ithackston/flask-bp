@@ -1,0 +1,10 @@
+root = true
+
+[*]
+indent_size = 4
+
+[*.{json,yml,html,js,css}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

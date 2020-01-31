@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block navbar %}
+    <nav class="my-2 my-md-0 mr-md-3">
+      <a class="p-2 text-dark" href="#">Settings</a>
+    </nav>
+    <input class="btn btn-outline-primary" id="appLaunch" value="Launch!" type="submit" form="appInput" />
+{% endblock %}
+
+{% block title %}Index{% endblock %}
+
+{% block header %}
+  <h1></h1>
+{% endblock %}
+
+{% block content %}
+  <h1>Hello World!</h1>
+  <form id="appInput">
+    <h2>Input</h2>
+    <div class="form-group row">
+      <label for="inputSeconds" class="col-sm-2 col-form-label">Host</label>
+      <div class="col-sm-10">
+        <div class="col-sm-10">
+          <input type="number" class="form-control" id="inputSeconds" name="seconds" placeholder="5" min="1" step="1" required />
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-labelledby="progressModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="progressModalLabel">Loading Data</h5>
+        </div>
+        <div class="modal-body">
+          ...
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var pollProgress = (job_id, seconds) => {
+    // Poll status and update modal content
+    $.get(`/status/${job_id}`, (data) => {
+      $("#progressModal .modal-body").text(seconds);
+
+      if (!data.finished) {
+        setTimeout(() => pollProgress(job_id, seconds + 1), 1000);
+      }
+      else {
+        $("#progressModal").modal("hide");
+      }
+    });
+  }
+
+  var onLaunchSuccess = (data) => {
+    $("#progressModal").modal({
+      backdrop: "static",
+      keyboard: false
+    });
+
+    pollProgress(data.job_id, 0);
+  }
+
+  $(document).ready(() => {
+    $("#appInput").submit((event) => {
+      // Stop the default submit action
+      event.preventDefault();
+
+      // Get form data as object
+      var data = {};
+      $("#appInput").serializeArray().map((x) => {data[x.name] = x.value;});
+
+      // Post to launch
+      $.ajax({
+        url: "/launch",
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: "json",
+        contentType: "application/json",
+        cache: false,
+        processData : false,
+        success: onLaunchSuccess
+      });
+    });
+  });
+</script>
+{% endblock %}
